@@ -35,21 +35,19 @@ Transactions → Rule Engine → Structured Summary → Claude API → Pydantic 
 ### Backend
 
 ```bash
-cd nudge/backend
-pip install -r requirements.txt
+pip install -r backend/requirements.txt
 
-# Optional: set API key for AI-powered insights
+# Optional: set API key for AI-powered insights (or add to .env file)
 export ANTHROPIC_API_KEY=your-key-here
 
 # Start the server
-cd ..
 PYTHONPATH=. python -m uvicorn backend.main:app --reload --port 8000
 ```
 
 ### Frontend
 
 ```bash
-cd nudge/frontend
+cd frontend
 npm install
 npm run dev
 ```

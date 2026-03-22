@@ -13,6 +13,13 @@ import os
 
 import anthropic
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from backend.services.data_service import DataService
+
 from backend.data.categories import Category
 from backend.engine.patterns import build_ai_summary
 from backend.validation.schemas import (
@@ -57,7 +64,7 @@ Return a JSON object with this exact structure:
 }}"""
 
 
-async def analyze_with_ai(data_service) -> tuple[list[Insight], bool]:
+async def analyze_with_ai(data_service: "DataService") -> tuple[list[Insight], bool]:
     """Call Claude API with spending summary and validate the response.
 
     Returns:
@@ -112,7 +119,7 @@ async def analyze_with_ai(data_service) -> tuple[list[Insight], bool]:
 
 def _apply_business_rules(insights: list[Insight]) -> list[Insight]:
     """Apply business rules on top of Pydantic-validated AI insights."""
-    filtered = []
+    filtered: list[Insight] = []
     for insight in insights:
         # Remove suggestions to cut essential expenses
         if insight.category in (Category.RENT, Category.UTILITIES):

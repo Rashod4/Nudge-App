@@ -4,15 +4,21 @@ Used by both the rules engine and the AI analyzer to compute
 weekly spending trends and build the privacy-safe AI summary.
 """
 
+from __future__ import annotations
+
 from datetime import datetime, timedelta
+from typing import Any, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from backend.services.data_service import DataService
 
 from backend.data.categories import Category
 
 
-def compute_weekly_spending(transactions: list[dict], num_weeks: int = 3) -> list[dict]:
+def compute_weekly_spending(transactions: list[dict[str, Any]], num_weeks: int = 3) -> list[dict[str, Any]]:
     """Returns weekly spending totals for the last N weeks."""
     now = datetime.now().date()
-    weeks = []
+    weeks: list[dict[str, Any]] = []
     for w in range(num_weeks):
         week_end = now - timedelta(days=w * 7)
         week_start = week_end - timedelta(days=7)
@@ -33,7 +39,7 @@ def compute_weekly_spending(transactions: list[dict], num_weeks: int = 3) -> lis
     return weeks
 
 
-def compute_category_trend(transactions: list[dict], category: str) -> dict:
+def compute_category_trend(transactions: list[dict[str, Any]], category: str) -> dict[str, Any]:
     """Returns week-over-week change for a category."""
     now = datetime.now().date()
 
@@ -50,7 +56,7 @@ def compute_category_trend(transactions: list[dict], category: str) -> dict:
 
     current_total, current_count = week_total(7, 0)
     prior_total, prior_count = week_total(14, 7)
-    change_pct = ((current_total - prior_total) / prior_total * 100) if prior_total > 0 else 0
+    change_pct: float = ((current_total - prior_total) / prior_total * 100) if prior_total > 0 else 0.0
 
     return {
         "category": category,
@@ -62,12 +68,12 @@ def compute_category_trend(transactions: list[dict], category: str) -> dict:
     }
 
 
-def detect_frequency_change(transactions: list[dict], category: str) -> dict:
+def detect_frequency_change(transactions: list[dict[str, Any]], category: str) -> dict[str, Any]:
     """Returns current vs prior week transaction frequency for a category."""
     trend = compute_category_trend(transactions, category)
     prior_count = trend["prior_week_count"]
     current_count = trend["current_week_count"]
-    ratio = (current_count / prior_count) if prior_count > 0 else float("inf") if current_count > 0 else 1.0
+    ratio: float = float(current_count / prior_count) if prior_count > 0 else float("inf") if current_count > 0 else 1.0
 
     return {
         "category": category,
@@ -77,7 +83,7 @@ def detect_frequency_change(transactions: list[dict], category: str) -> dict:
     }
 
 
-def build_ai_summary(data_service) -> str:
+def build_ai_summary(data_service: DataService) -> str:
     """Build the aggregated summary sent to the AI.
 
     This is the PRIVACY BOUNDARY: only category totals, trends, and
@@ -88,15 +94,15 @@ def build_ai_summary(data_service) -> str:
     txns = data_service.get_transactions()
 
     # Compute trends for spending categories
-    spending_cats = [c for c in Category if c not in (Category.INCOME, Category.UNCATEGORIZED)]
-    trends = []
+    spending_cats: list[Category] = [c for c in Category if c not in (Category.INCOME, Category.UNCATEGORIZED)]
+    trends: list[dict[str, Any]] = []
     for cat in spending_cats:
         trend = compute_category_trend(txns, cat.value)
         if trend["current_week_total"] > 0 or trend["prior_week_total"] > 0:
             trends.append(trend)
 
     # Frequency changes
-    freq_changes = []
+    freq_changes: list[dict[str, Any]] = []
     for cat in spending_cats:
         freq = detect_frequency_change(txns, cat.value)
         if freq["current_count"] > 0 or freq["prior_count"] > 0:

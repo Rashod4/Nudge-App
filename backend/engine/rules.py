@@ -3,12 +3,19 @@
 Runs BEFORE the AI. Produces high-confidence insights from pure computation.
 """
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from backend.services.data_service import DataService
+
 from backend.data.categories import Category
 from backend.engine.patterns import compute_category_trend, detect_frequency_change
 from backend.validation.schemas import Insight, InsightType, SuggestionType
 
 
-def run_rules(data_service) -> list[Insight]:
+def run_rules(data_service: DataService) -> list[Insight]:
     """Run all deterministic rules and return validated insights."""
     insights: list[Insight] = []
     txns = data_service.get_transactions(limit=200)
