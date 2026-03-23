@@ -1,1 +1,66 @@
 @import "tailwindcss";
+
+@theme {
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --color-surface: #0f1117;
+  --color-surface-raised: #181a24;
+  --color-surface-overlay: #1e2130;
+  --color-border: #2a2d3e;
+  --color-border-subtle: #23263a;
+  --color-text-primary: #f0f0f5;
+  --color-text-secondary: #9196ab;
+  --color-text-muted: #5c6178;
+  --color-accent: #6c5ce7;
+  --color-accent-light: #a29bfe;
+  --color-positive: #00cec9;
+  --color-warning: #fdcb6e;
+  --color-danger: #ff7675;
+  --color-info: #74b9ff;
+}
+
+body {
+  background-color: var(--color-surface);
+  color: var(--color-text-primary);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 3px;
+}
+
+/* Animations */
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.4s ease-out both;
+}
+
+.skeleton {
+  background: linear-gradient(90deg, var(--color-surface-raised) 25%, var(--color-surface-overlay) 50%, var(--color-surface-raised) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}

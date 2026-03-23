@@ -12,6 +12,11 @@ export async function fetchInsights() {
   return res.json();
 }
 
+export async function fetchAiInsights() {
+  const res = await fetch(`${BASE}/insights/ai`);
+  return res.json();
+}
+
 export async function fetchSummary(timeframe = 'all') {
   const res = await fetch(`${BASE}/summary?timeframe=${timeframe}`);
   return res.json();

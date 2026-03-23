@@ -1,16 +1,16 @@
 import { useState } from 'react';
 
 const CATEGORY_COLORS = {
-  food: 'bg-orange-100 text-orange-700',
-  rent: 'bg-red-100 text-red-700',
-  utilities: 'bg-indigo-100 text-indigo-700',
-  entertainment: 'bg-pink-100 text-pink-700',
-  transportation: 'bg-blue-100 text-blue-700',
-  shopping: 'bg-yellow-100 text-yellow-700',
-  subscription: 'bg-purple-100 text-purple-700',
-  income: 'bg-emerald-100 text-emerald-700',
-  transfer: 'bg-gray-100 text-gray-600',
-  uncategorized: 'bg-gray-100 text-gray-500',
+  food: 'bg-warning/15 text-warning',
+  rent: 'bg-danger/15 text-danger',
+  utilities: 'bg-accent/15 text-accent-light',
+  entertainment: 'bg-pink-500/15 text-pink-400',
+  transportation: 'bg-info/15 text-info',
+  shopping: 'bg-orange-500/15 text-orange-400',
+  subscription: 'bg-accent/15 text-accent-light',
+  income: 'bg-positive/15 text-positive',
+  transfer: 'bg-surface-overlay text-text-muted',
+  uncategorized: 'bg-surface-overlay text-text-muted',
 };
 
 export default function TransactionList({ transactions, categories, loading }) {
@@ -20,8 +20,9 @@ export default function TransactionList({ transactions, categories, loading }) {
   if (loading) {
     return (
       <div className="space-y-2">
+        <div className="h-5 w-40 skeleton rounded mb-4" />
         {[1, 2, 3, 4, 5].map((i) => (
-          <div key={i} className="bg-gray-100 rounded h-10 animate-pulse" />
+          <div key={i} className="skeleton rounded-lg h-12" />
         ))}
       </div>
     );
@@ -35,12 +36,12 @@ export default function TransactionList({ transactions, categories, loading }) {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold text-gray-900">Recent Transactions</h2>
+      <div className="flex items-center justify-between mb-5">
+        <h2 className="text-base font-semibold text-text-primary">Transactions</h2>
         <select
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
-          className="text-sm border border-gray-300 rounded-md px-2 py-1 bg-white"
+          className="text-sm bg-surface-overlay border border-border text-text-secondary rounded-lg px-3 py-1.5 focus:outline-none focus:border-accent transition-colors"
         >
           <option value="all">All Categories</option>
           {categories.map((c) => (
@@ -52,28 +53,32 @@ export default function TransactionList({ transactions, categories, loading }) {
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-gray-200 text-left text-gray-500">
-              <th className="pb-2 font-medium">Date</th>
-              <th className="pb-2 font-medium">Description</th>
-              <th className="pb-2 font-medium">Category</th>
-              <th className="pb-2 font-medium text-right">Amount</th>
+            <tr className="border-b border-border text-left">
+              <th className="pb-3 text-xs font-medium text-text-muted uppercase tracking-wider">Date</th>
+              <th className="pb-3 text-xs font-medium text-text-muted uppercase tracking-wider">Description</th>
+              <th className="pb-3 text-xs font-medium text-text-muted uppercase tracking-wider">Category</th>
+              <th className="pb-3 text-xs font-medium text-text-muted uppercase tracking-wider text-right">Amount</th>
             </tr>
           </thead>
           <tbody>
-            {displayed.map((txn) => (
-              <tr key={txn.id} className="border-b border-gray-100 hover:bg-gray-50">
-                <td className="py-2.5 text-gray-600 whitespace-nowrap">
+            {displayed.map((txn, idx) => (
+              <tr
+                key={txn.id}
+                className="border-b border-border-subtle hover:bg-surface-overlay/50 transition-colors animate-fade-in-up"
+                style={{ animationDelay: `${idx * 20}ms` }}
+              >
+                <td className="py-3 text-text-muted whitespace-nowrap">
                   {new Date(txn.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                 </td>
-                <td className="py-2.5 text-gray-900 font-medium truncate max-w-[200px]">
+                <td className="py-3 text-text-primary font-medium truncate max-w-[250px]">
                   {txn.raw_description}
                 </td>
-                <td className="py-2.5">
-                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${CATEGORY_COLORS[txn.category] || CATEGORY_COLORS.uncategorized}`}>
+                <td className="py-3">
+                  <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${CATEGORY_COLORS[txn.category] || CATEGORY_COLORS.uncategorized}`}>
                     {txn.category}
                   </span>
                 </td>
-                <td className={`py-2.5 text-right font-mono font-medium ${txn.amount > 0 ? 'text-emerald-600' : 'text-gray-900'}`}>
+                <td className={`py-3 text-right font-mono font-medium ${txn.amount > 0 ? 'text-positive' : 'text-text-primary'}`}>
                   {txn.amount > 0 ? '+' : ''}{txn.amount < 0 ? '-' : ''}${Math.abs(txn.amount).toFixed(2)}
                 </td>
               </tr>
@@ -85,7 +90,7 @@ export default function TransactionList({ transactions, categories, loading }) {
       {filtered.length > 20 && !showAll && (
         <button
           onClick={() => setShowAll(true)}
-          className="mt-3 text-sm text-blue-600 hover:text-blue-700 font-medium"
+          className="mt-4 text-sm text-accent-light hover:text-accent font-medium transition-colors"
         >
           Show all {filtered.length} transactions
         </button>

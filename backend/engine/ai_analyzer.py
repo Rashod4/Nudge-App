@@ -1,3 +1,4 @@
+"""AI Analyzer — Gemini API integration with validation."""
 # PRIVACY NOTE: This module sends ONLY aggregated, anonymized spending summaries
 # to the AI API. Raw transaction descriptions, merchant names, account details,
 # and personally identifiable information are NEVER transmitted.
@@ -7,15 +8,14 @@
 # - Data processing agreements with AI provider
 # - Option for local model inference to keep data on-premises
 
+from __future__ import annotations
+
 import json
 import logging
 import os
-
-import anthropic
-
-from __future__ import annotations
-
 from typing import TYPE_CHECKING
+
+from google import genai
 
 if TYPE_CHECKING:
     from backend.services.data_service import DataService
@@ -65,30 +65,26 @@ Return a JSON object with this exact structure:
 
 
 async def analyze_with_ai(data_service: "DataService") -> tuple[list[Insight], bool]:
-    """Call Claude API with spending summary and validate the response.
+    """Call Gemini API with spending summary and validate the response.
 
     Returns:
         Tuple of (list of validated insights, bool indicating AI was available)
     """
-    api_key = os.environ.get("ANTHROPIC_API_KEY")
+    api_key = os.environ.get("GEMINI_API_KEY")
     if not api_key:
-        logger.warning("ANTHROPIC_API_KEY not set — skipping AI analysis")
+        logger.warning("GEMINI_API_KEY not set — skipping AI analysis")
         return [], False
 
     try:
         summary_text = build_ai_summary(data_service)
 
-        client = anthropic.AsyncAnthropic(api_key=api_key)
-        response = await client.messages.create(
-            model="claude-sonnet-4-20250514",
-            max_tokens=1024,
-            system=SYSTEM_PROMPT,
-            messages=[
-                {"role": "user", "content": USER_PROMPT_TEMPLATE.format(summary=summary_text)}
-            ],
+        client = genai.Client(api_key=api_key)
+        response = await client.aio.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=f"{SYSTEM_PROMPT}\n\n{USER_PROMPT_TEMPLATE.format(summary=summary_text)}",
         )
 
-        raw_text = response.content[0].text
+        raw_text = response.text
 
         # Parse JSON — handle cases where AI wraps in markdown code blocks
         json_text = raw_text.strip()
@@ -106,9 +102,6 @@ async def analyze_with_ai(data_service: "DataService") -> tuple[list[Insight], b
 
         return insights, True
 
-    except anthropic.APIError as e:
-        logger.error("Claude API error: %s", e)
-        return [], False
     except json.JSONDecodeError as e:
         logger.error("AI returned invalid JSON: %s", e)
         return [], False

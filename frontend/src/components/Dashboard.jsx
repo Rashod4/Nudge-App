@@ -1,16 +1,44 @@
 import { useState, useEffect } from 'react';
-import { fetchSummary, fetchInsights, fetchTransactions, fetchCategories } from '../services/api';
+import { fetchSummary, fetchInsights, fetchAiInsights, fetchTransactions, fetchCategories } from '../services/api';
 import InsightsFeed from './InsightsFeed';
 import SpendingChart from './SpendingChart';
 import TransactionList from './TransactionList';
 
-function SummaryCard({ label, value, sub, color = 'text-gray-900' }) {
+function SummaryCard({ label, value, sub, icon, accent = 'text-text-primary' }) {
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-5">
-      <p className="text-sm text-gray-500 font-medium">{label}</p>
-      <p className={`text-2xl font-bold mt-1 ${color}`}>{value}</p>
-      {sub && <p className="text-xs text-gray-400 mt-1">{sub}</p>}
+    <div className="bg-surface-raised border border-border rounded-2xl p-5 hover:border-border/80 transition-all duration-200 animate-fade-in-up">
+      <div className="flex items-center gap-2 mb-3">
+        <span className="text-lg">{icon}</span>
+        <p className="text-xs font-medium text-text-muted uppercase tracking-wider">{label}</p>
+      </div>
+      <p className={`text-2xl font-bold ${accent}`}>{value}</p>
+      {sub && <p className="text-xs text-text-muted mt-2">{sub}</p>}
     </div>
+  );
+}
+
+function AiStatusPill({ aiLoading, aiAvailable }) {
+  if (aiLoading) {
+    return (
+      <span className="inline-flex items-center gap-1.5 text-xs px-3 py-1 rounded-full bg-accent/10 text-accent-light">
+        <span className="w-1.5 h-1.5 rounded-full bg-accent-light animate-pulse" />
+        AI analyzing...
+      </span>
+    );
+  }
+  if (aiAvailable) {
+    return (
+      <span className="inline-flex items-center gap-1.5 text-xs px-3 py-1 rounded-full bg-positive/10 text-positive">
+        <span className="w-1.5 h-1.5 rounded-full bg-positive" />
+        AI + Rules
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center gap-1.5 text-xs px-3 py-1 rounded-full bg-warning/10 text-warning">
+      <span className="w-1.5 h-1.5 rounded-full bg-warning" />
+      Rules only
+    </span>
   );
 }
 
@@ -20,6 +48,7 @@ export default function Dashboard() {
   const [transactions, setTransactions] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [aiLoading, setAiLoading] = useState(true);
 
   useEffect(() => {
     async function load() {
@@ -34,10 +63,20 @@ export default function Dashboard() {
         setInsightsData(ins);
         setTransactions(txns);
         setCategories(cats);
+        setLoading(false);
+
+        try {
+          const aiIns = await fetchAiInsights();
+          setInsightsData(aiIns);
+        } catch (err) {
+          console.error('AI insights failed:', err);
+        } finally {
+          setAiLoading(false);
+        }
       } catch (err) {
         console.error('Failed to load data:', err);
-      } finally {
         setLoading(false);
+        setAiLoading(false);
       }
     }
     load();
@@ -47,52 +86,65 @@ export default function Dashboard() {
   const aiAvailable = insightsData?.ai_available ?? false;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-surface">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200">
-        <div className="max-w-6xl mx-auto px-6 py-5">
-          <h1 className="text-2xl font-bold text-gray-900">Nudge</h1>
-          <p className="text-sm text-gray-500 mt-0.5">Financial Intelligence Engine</p>
+      <header className="border-b border-border bg-surface-raised/50 backdrop-blur-md sticky top-0 z-10">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-accent to-accent-light flex items-center justify-center text-white font-bold text-sm">
+              N
+            </div>
+            <div>
+              <h1 className="text-lg font-bold text-text-primary">Nudge</h1>
+              <p className="text-xs text-text-muted">Financial Intelligence</p>
+            </div>
+          </div>
+          <AiStatusPill aiLoading={aiLoading} aiAvailable={aiAvailable} />
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto px-6 py-6 space-y-6">
+      <main className="max-w-7xl mx-auto px-6 py-8 space-y-8">
         {/* Summary Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <SummaryCard
+            icon="$"
             label="Total Spent"
             value={summary ? `$${summary.total_spent.toLocaleString()}` : '...'}
             sub={summary ? `over ${summary.days_of_data} days` : ''}
-            color="text-gray-900"
           />
           <SummaryCard
+            icon="+"
             label="Income"
             value={summary ? `$${summary.total_income.toLocaleString()}` : '...'}
-            color="text-emerald-600"
+            accent="text-positive"
           />
           <SummaryCard
-            label="Daily Burn Rate"
+            icon="~"
+            label="Burn Rate"
             value={summary ? `$${summary.burn_rate_daily}/day` : '...'}
             sub={summary ? `~$${(summary.burn_rate_daily * 30).toFixed(0)}/mo projected` : ''}
-            color="text-amber-600"
+            accent="text-warning"
           />
           <SummaryCard
-            label="Active Insights"
+            icon="#"
+            label="Insights"
             value={loading ? '...' : insights.length}
-            sub={aiAvailable ? 'AI + Rule engine' : 'Rule engine only'}
+            sub={aiLoading ? 'Loading AI insights...' : aiAvailable ? 'AI + Rule engine' : 'Rule engine only'}
+            accent="text-accent-light"
           />
         </div>
 
         {/* Insights + Chart */}
         <div className="grid lg:grid-cols-5 gap-6">
-          <div className="lg:col-span-3 bg-white rounded-xl border border-gray-200 p-5">
+          <div className="lg:col-span-3 bg-surface-raised border border-border rounded-2xl p-6">
             <InsightsFeed
               insights={insights}
               aiAvailable={aiAvailable}
+              aiLoading={aiLoading}
               loading={loading}
             />
           </div>
-          <div className="lg:col-span-2 bg-white rounded-xl border border-gray-200 p-5">
+          <div className="lg:col-span-2 bg-surface-raised border border-border rounded-2xl p-6">
             <SpendingChart
               breakdown={summary?.category_breakdown || []}
               loading={loading}
@@ -101,7 +153,7 @@ export default function Dashboard() {
         </div>
 
         {/* Transactions */}
-        <div className="bg-white rounded-xl border border-gray-200 p-5">
+        <div className="bg-surface-raised border border-border rounded-2xl p-6">
           <TransactionList
             transactions={transactions}
             categories={categories}
@@ -110,10 +162,9 @@ export default function Dashboard() {
         </div>
       </main>
 
-      {/* Footer */}
-      <footer className="border-t border-gray-200 mt-8">
-        <div className="max-w-6xl mx-auto px-6 py-4 text-center text-xs text-gray-400">
-          Nudge v1.0 — AI responses validated with Pydantic schemas. Rule engine runs deterministically.
+      <footer className="border-t border-border mt-4">
+        <div className="max-w-7xl mx-auto px-6 py-4 text-center text-xs text-text-muted">
+          Nudge v1.0 — AI insights validated with Pydantic. Rule engine runs deterministically.
         </div>
       </footer>
     </div>

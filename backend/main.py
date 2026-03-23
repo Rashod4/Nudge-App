@@ -1,10 +1,14 @@
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
 from dotenv import load_dotenv
 load_dotenv()
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from backend.routes import categories, insights, summary, transactions
+from backend.api import categories, insights, summary, transactions
 
 app = FastAPI(title="Nudge", version="1.0.0")
 

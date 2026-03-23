@@ -1,11 +1,12 @@
 import InsightCard from './InsightCard';
 
-export default function InsightsFeed({ insights, aiAvailable, loading }) {
+export default function InsightsFeed({ insights, aiAvailable, aiLoading, loading }) {
   if (loading) {
     return (
       <div className="space-y-3">
+        <div className="h-5 w-24 skeleton rounded mb-4" />
         {[1, 2, 3].map((i) => (
-          <div key={i} className="bg-gray-100 rounded-lg h-24 animate-pulse" />
+          <div key={i} className="skeleton rounded-xl h-28" />
         ))}
       </div>
     );
@@ -13,20 +14,22 @@ export default function InsightsFeed({ insights, aiAvailable, loading }) {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold text-gray-900">Insights</h2>
-        {!aiAvailable && (
-          <span className="text-xs px-2 py-1 bg-amber-100 text-amber-700 rounded-full">
-            Rule-based only
+      <div className="flex items-center justify-between mb-5">
+        <h2 className="text-base font-semibold text-text-primary">Insights</h2>
+        {aiLoading && (
+          <span className="text-xs px-2.5 py-1 rounded-full bg-accent/10 text-accent-light animate-pulse">
+            Loading AI...
           </span>
         )}
       </div>
       {insights.length === 0 ? (
-        <p className="text-gray-500 text-sm">No insights available yet.</p>
+        <p className="text-text-muted text-sm">No insights available yet.</p>
       ) : (
-        insights.map((insight, idx) => (
-          <InsightCard key={idx} insight={insight} />
-        ))
+        <div className="space-y-3">
+          {insights.map((insight, idx) => (
+            <InsightCard key={idx} insight={insight} index={idx} />
+          ))}
+        </div>
       )}
     </div>
   );
